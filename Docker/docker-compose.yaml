@@ -1,0 +1,58 @@
+version: "3.5"
+networks:
+  proxynet:
+    driver: bridge
+services:
+  dbProd:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "bibigame"
+      POSTGRES_USER: "bibigame"
+      POSTGRES_PASSWORD: "bibigame"
+    ports:
+      - "5434:5432"
+    networks:
+      - proxynet
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U 'bibigame' -d 'bibigame'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  dbDev:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "bibigamedev"
+      POSTGRES_USER: "bibigame"
+      POSTGRES_PASSWORD: "bibigame"
+    ports:
+      - "5435:5432"
+    networks:
+      - proxynet
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U 'bibigame' -d 'bibigamedev'" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      - dbProd
+  api:
+    image: api:1
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+    #      - ASPNETCORE_Kestrel__Certificates__Default__Password=13Friends)
+    #      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/host_cert_for_kestrel.pfx
+    ports:
+      # Replace the values on the left by the values on your launchSettings.json
+      - "5000:5000"
+    networks:
+      - proxynet
+    depends_on:
+      - dbProd
+      - dbDev
+    #volumes:
+     # - /etc/letsencrypt/live/spy.hr00.ru:/https:ro
+     # - /root/res:/app/res:ro
+
+#  for https with fullchain letsencrypt cert
+# openssl pkcs12 -export -out aspnetapp.pfx -inkey privkey.pem -in fullchain.pem -certfile fullchain.pem 

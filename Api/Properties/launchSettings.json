@@ -1,0 +1,20 @@
+﻿{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "Dev": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:5000;https://localhost:5001",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+//  "Kestrel":{
+//    "Certificates":{
+//      "Default":{
+//        "Path":     "~/.aspnet/https/api.pfx",
+//        "Password": "13Friends)"
+//      }
+//    }
+//  }
