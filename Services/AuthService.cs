@@ -45,8 +45,8 @@ namespace Services
                     Id = Guid.NewGuid(),
                     DeviceId = deviceId,
                     Role = 1,
-                    Level = 0,
-                    Score = 0
+                    Term = 4,
+                    Cycle = 28
                 };
                 _userService.AddNewAnonUser(user);
             }

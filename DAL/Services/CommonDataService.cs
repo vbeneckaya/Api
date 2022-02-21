@@ -13,22 +13,22 @@ namespace DAL.Services
             _context = context;
         }
 
-        public TEntity GetById<TEntity>(Guid id) where TEntity : class, IPersistable
+        public TEntity GetById<TEntity>(Guid id) where TEntity : class
         {
             return GetDbSet<TEntity>().Find(id);
         }
 
-        public TEntity GetByIdOrNull<TEntity>(Guid? id) where TEntity : class, IPersistable
+        public TEntity GetByIdOrNull<TEntity>(Guid? id) where TEntity : class
         {
             return id != null ? GetById<TEntity>(id.Value) : null;
         }
 
-        public DbSet<TEntity> GetDbSet<TEntity>() where TEntity : class, IPersistable
+        public DbSet<TEntity> GetDbSet<TEntity>() where TEntity : class
         {
             return _context.Set<TEntity>();
         }
 
-        public Guid? CreateIfNotExisted<TEntity>(string fieldName, string value) where TEntity : class, IPersistable
+        public Guid? CreateIfNotExisted<TEntity>(string fieldName, string value) where TEntity : class
         {
             var eType = typeof(TEntity);
             var entity = (TEntity)eType.Assembly.CreateInstance(eType.FullName);

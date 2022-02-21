@@ -1,16 +1,18 @@
 IP="217.29.62.245"
 USER="root"
 
+docker login --username valeribenua --password "98ade691-0a37-41d1-afca-9e6113a8008b"
+
 # Сделать билд
 
 # Собрать image
 
-# Запушить image
-echo 1. ----------------------------- Запушить image start
-docker login --username valeribenua --password "13Friends)"
-docker push valeribenua/api:1
-echo    ---------- Запушить image finish
-echo 
+## Запушить image
+#echo 1. ----------------------------- Запушить image start
+#docker push valeribenua/api:1
+##sleep 10
+#echo    ---------- Запушить image finish
+#echo 
 
 # Остановить запущенный на сервере container
 echo 2. ----------------------------- Остановить запущенный на сервере container start

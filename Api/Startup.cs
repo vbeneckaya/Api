@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Common.Enums;
 using Domain.Auth;
 using Domain.Extensions;
@@ -29,6 +31,18 @@ namespace Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            // var options = new JsonSerializerOptions()
+            // {
+            //     PropertyNameCaseInsensitive = true,
+            //     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            //     NumberHandling = JsonNumberHandling.AllowReadingFromString
+            // };
+            
+            // services.AddControllers().AddJsonOptions(j =>
+            // {
+            //     j.JsonSerializerOptions.DictionaryKeyPolicy = new CustomJsonNamingPolicy();
+            // });
+            
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {

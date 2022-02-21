@@ -31,11 +31,11 @@ namespace Api.Controllers
              return resp;
          }
 
-        [HttpPost]
-        public ActionResult<GetTokenResponse> SignInGamer([FromBody] SignInDto modelDto)
-        {
-           // var resp = _authService.SignIn(modelDto);
-            return  new GetTokenResponse();
-        }
+        // [HttpPost]
+        // public ActionResult<GetTokenResponse> SignInGamer([FromBody] SignInDto modelDto)
+        // {
+        //    // var resp = _authService.SignIn(modelDto);
+        //     return  new GetTokenResponse();
+        // }
     }
 }

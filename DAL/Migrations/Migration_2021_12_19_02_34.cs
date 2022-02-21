@@ -13,8 +13,8 @@ namespace DAL.Migrations
                 new Column("Id", DbType.Guid, ColumnProperty.PrimaryKey),
                 new Column("NicName", DbType.String.WithSize(100)),
                 new Column("Role", DbType.Int16, defaultValue: 1),
-                new Column("Level", DbType.Int64, defaultValue: 0),
-                new Column("Score", DbType.Int64, defaultValue: 0),
+                new Column("Term", DbType.Int64, defaultValue: 0),
+                new Column("Cycle", DbType.Int64, defaultValue: 0),
                 new Column("DeviceId", DbType.String.WithSize(300)),
                 new Column("PasswordHash", DbType.String));
             Database.AddIndex("Users_pk", true, "Users", "Id");

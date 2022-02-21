@@ -19,6 +19,7 @@ namespace DAL
         }
         
         public DbSet<User> Users { get; set; }
+        public DbSet<MyDay> MyDays { get; set; }
         public DbSet<File> Files { get; set; }
         public DbSet<Download> Downloads { get; set; }
 

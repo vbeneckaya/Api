@@ -2,9 +2,8 @@ using System;
 
 namespace DAL.Models
 {
-    public class File : IPersistable
+    public class File : Base
     {
-        public Guid Id { get; set; }
         public String FileName { get; set; }
         public String Ext { get; set; }
         public Byte[] Data { get; set; }
