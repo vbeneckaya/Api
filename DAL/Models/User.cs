@@ -11,6 +11,8 @@ namespace DAL.Models
         
         public int Term { get; set; }
         public int Cycle { get; set; }
+        public string FcmToken { get; set; }
+        public string JwtToken { get; set; }
 
         public override string ToString()
         {

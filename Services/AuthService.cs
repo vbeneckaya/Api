@@ -53,6 +53,10 @@ namespace Services
             
             var accessTokenIdentity = CreateClaimsIdentity(user.Id, user.NicName ?? "", user.Role.ToString());
             var accessToken = CreateJwtToken(accessTokenIdentity);
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(accessToken);
+
+            _userService.SaveJwtToken(user.Id, tokenString);
+            
             return new JwtSecurityTokenHandler().WriteToken(accessToken);
         }
 

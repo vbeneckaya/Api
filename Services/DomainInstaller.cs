@@ -4,6 +4,7 @@ using DAL.Services;
 using Domain.Auth;
 using Domain.Download;
 using Domain.Error;
+using Domain.Log;
 using Domain.User;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,7 @@ namespace Services
             //  services.AddScoped<IIdentityService, IdentityService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<ILogService, LogService>();
             services.AddScoped<IErrorService, ErrorHandlerService>();
             services.AddScoped<IDownloadService, DownloadService>();
 

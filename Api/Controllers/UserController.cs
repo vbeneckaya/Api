@@ -20,20 +20,28 @@ namespace Api.Controllers
         {
             _userService = userService;
         }
-        
+
+        [HttpGet("{token}")]
+        public ActionResult SaveNotifyToken(string token)
+        {
+            var userIds = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            _userService.SaveNotifyToken(Guid.Parse(userIds ?? ""), token);
+            return Ok();
+        }
+
         [HttpPost]
-        public ActionResult<List<MyDayDto>> UpdateDate([FromBody] SwitchDateDto switchDateDto)
+        public ActionResult<List<MyDayDto>> SwitchDate([FromBody] SwitchDateDto switchDateDto)
         {
             var userIds = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             var res = _userService.SwitchDateByUserId(Guid.Parse(userIds ?? ""), switchDateDto);
             return Ok(res);
         }
-
+        
         [HttpPost]
-        public ActionResult<List<MyDayDto>> SetDateVolume([FromQuery] Guid dateId, int volume)
+        public ActionResult<List<MyDayDto>> UpdateDate([FromBody] SwitchDateDto switchDateDto)
         {
             var userIds = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-            var res = _userService.SetDayVolume(dateId, volume, Guid.Parse(userIds ?? ""));
+            var res = _userService.UpdateDateByUserId(Guid.Parse(userIds ?? ""), switchDateDto);
             return Ok(res);
         }
 
@@ -42,6 +50,14 @@ namespace Api.Controllers
         {
             var userIds = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
             var res = _userService.GetStartDates(Guid.Parse(userIds ?? ""));
+            return res != null ? Ok(res): BadRequest();
+        }
+        
+        [HttpGet]
+        public ActionResult<List<MyDayDto>> GetExampleDates()
+        {
+            var userIds = HttpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+            var res = _userService.GetExampleDates(Guid.Parse(userIds ?? ""));
             return res != null ? Ok(res): BadRequest();
         }
 

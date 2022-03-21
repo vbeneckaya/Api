@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Domain.MyCalendar;
 
 namespace Domain.User
 {
@@ -11,6 +9,7 @@ namespace Domain.User
         public bool IsModeratedTerm { get; set; }
         public int Cycle { get; set; }
         public bool IsModeratedCycle { get; set; }
+        public bool NeedShowExample { get; set; }
         //public List<MyDayDto> Dates { get; set; }
     }
 }

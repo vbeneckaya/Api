@@ -89,6 +89,8 @@ namespace Api
                 
             });
             
+            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+            
             services.AddDomain(Configuration, true);
             
             // services.AddDataProtection()

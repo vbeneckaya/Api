@@ -12,10 +12,13 @@ namespace Domain.User
         GameDataDto GetGameDataByUserId(Guid userId);
         bool SetGameDataByUserId(Guid userId, GameDataDto dto);
         public List<MyDayDto> SwitchDateByUserId(Guid userId, SwitchDateDto dto);
+        public List<MyDayDto> UpdateDateByUserId(Guid userId, SwitchDateDto dto);
         public List<MyDayDto> SetCycleByUserId(Guid userId, int value, SwitchDateDto dto);
         public List<MyDayDto> SetTermByUserId(Guid userId, int value, SwitchDateDto dto);
         public List<MyDayDto> GetStartDates(Guid userId);
+        public List<MyDayDto> GetExampleDates(Guid userId);
         public List<MyDayDto> GetNextDates(Guid userId, SwitchDateDto dto);
-        public List<MyDayDto> SetDayVolume(Guid dayId, int volume, Guid userId);
+        void SaveNotifyToken(Guid userId, string token);
+        void SaveJwtToken(Guid userId, string token);
     }
 }

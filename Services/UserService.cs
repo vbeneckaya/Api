@@ -27,6 +27,7 @@ namespace Services
             _userRepository = dataService.GetDbSet<User>();
             _myDayRepository = dataService.GetDbSet<MyDay>();
             _db = dataService;
+
             // _securityService = security;
         }
 
@@ -41,6 +42,7 @@ namespace Services
             {
                 _userRepository.Add(new User()
                 {
+                    Id = model.Id,
                     DeviceId = model.DeviceId,
                     Term = model.Term,
                     Cycle = model.Cycle,
@@ -72,7 +74,7 @@ namespace Services
                 Cycle = user.Cycle,
                 IsModeratedTerm = !HasAnyDate(userId),
                 IsModeratedCycle = !HasAnyCycle(userId),
-                //Dates = GetStartDates(userId)
+                NeedShowExample = NeedShowExample(userId)
             };
         }
 
@@ -117,20 +119,76 @@ namespace Services
                         Date = new DateOnly(dto.Year, dto.Month, dto.Day),
                         Year = dto.Year,
                         Month = dto.Month,
-                        Day = dto.Day
+                        Day = dto.Day,
+                        Volume = dto.Volume == 0 ? DefineInitialVolume() : dto.Volume
                     };
                     _myDayRepository.Add(myDay);
                 }
 
                 _db.SaveChanges();
-                
+
+                CalcNewCycle();
+                CalcNewTerm();
+
+                List<int> r = new List<int>();
+                var t = r.Count;
+
+                return
+                    FillDates(userId
+                        , new DateOnly(dto.MinDay.Year, dto.MinDay.Month, dto.MinDay.Day)
+                        , new DateOnly(dto.MaxDay.Year, dto.MaxDay.Month, dto.MaxDay.Day))
+                    ;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return new List<MyDayDto>();
+            }
+        }
+
+        private int DefineInitialVolume()
+        {
+            return 10;
+        }
+
+        public List<MyDayDto> UpdateDateByUserId(Guid userId, SwitchDateDto dto)
+        {
+            try
+            {
+                _userId = userId;
+                var myDay = _myDayRepository.FirstOrDefault(
+                    e =>
+                        e.UserId == userId &&
+                        e.Year == dto.Year && e.Month == dto.Month && e.Day == dto.Day
+                );
+                if (myDay != null)
+                {
+                    myDay.Volume = dto.Volume;
+                    _myDayRepository.Update(myDay);
+                }
+                else
+                {
+                    myDay = new MyDay()
+                    {
+                        UserId = userId,
+                        Date = new DateOnly(dto.Year, dto.Month, dto.Day),
+                        Year = dto.Year,
+                        Month = dto.Month,
+                        Day = dto.Day,
+                        Volume = dto.Volume
+                    };
+                    _myDayRepository.Add(myDay);
+                }
+
+                _db.SaveChanges();
+
                 CalcNewCycle();
                 CalcNewTerm();
 
                 return
-                     FillDates(userId
-                            , new DateOnly(dto.MinDay.Year, dto.MinDay.Month, dto.MinDay.Day)
-                            , new DateOnly(dto.MaxDay.Year, dto.MaxDay.Month, dto.MaxDay.Day))
+                    FillDates(userId
+                        , new DateOnly(dto.MinDay.Year, dto.MinDay.Month, dto.MinDay.Day)
+                        , new DateOnly(dto.MaxDay.Year, dto.MaxDay.Month, dto.MaxDay.Day))
                     ;
             }
             catch (Exception e)
@@ -143,7 +201,7 @@ namespace Services
         public List<MyDayDto> SetCycleByUserId(Guid userId, int value, SwitchDateDto dto)
         {
             var user = _userRepository.Find(userId);
-            
+
             if (!HasAnyCycle(userId))
             {
                 user.Cycle = value;
@@ -154,7 +212,7 @@ namespace Services
             return FillDates(userId
                     , new DateOnly(dto.MinDay.Year, dto.MinDay.Month, dto.MinDay.Day)
                     , new DateOnly(dto.MaxDay.Year, dto.MaxDay.Month, dto.MaxDay.Day))
-            ;
+                ;
         }
 
         public List<MyDayDto> SetTermByUserId(Guid userId, int value, SwitchDateDto dto)
@@ -166,11 +224,11 @@ namespace Services
                 _userRepository.Update(user);
                 _db.SaveChanges();
             }
-            
+
             return FillDates(userId
                     , new DateOnly(dto.MinDay.Year, dto.MinDay.Month, dto.MinDay.Day)
                     , new DateOnly(dto.MaxDay.Year, dto.MaxDay.Month, dto.MaxDay.Day))
-            ;
+                ;
         }
 
         public List<MyDayDto> GetStartDates(Guid userId)
@@ -188,6 +246,43 @@ namespace Services
             var maxDay = new DateOnly(maxYear, maxMonth, DateTime.DaysInMonth(maxYear, maxMonth));
 
             return FillDates(userId, minDay, maxDay);
+        }
+
+        public List<MyDayDto> GetExampleDates(Guid userId)
+        {
+            var dayCount = 4;
+            var min = DateTime.Today.AddMonths(-1).AddDays(-7);
+            var max = min.AddDays(dayCount);
+
+            var minDay = new DateOnly(min.Year, min.Month, min.Day);
+            var maxDay = new DateOnly(max.Year, max.Month, max.Day);
+
+            var part1 = FillDates(userId, minDay, maxDay);
+            
+            part1[0].Volume = 50;
+            part1[1].Volume = 100;
+            part1[2].Volume = 100;
+            part1[3].Volume = 50;
+            part1[4].Volume = 10;
+
+            min = min.AddDays(28);
+            max = min.AddDays(dayCount);
+
+            minDay = new DateOnly(min.Year, min.Month, min.Day);
+            maxDay = new DateOnly(max.Year, max.Month, max.Day);
+
+            var part2 = FillDates(userId, minDay, maxDay);
+            
+            part2[0].Volume = 50;
+            part2[1].Volume = 100;
+            part2[2].Volume = 100;
+            part2[3].Volume = 50;
+            part2[4].Volume = 10;
+
+            part1.AddRange(part2);
+            part1.ForEach(e => e.Filled = true);
+
+            return part1;
         }
 
         public List<MyDayDto> GetNextDates(Guid userId, SwitchDateDto dto)
@@ -211,9 +306,25 @@ namespace Services
             }
         }
 
-        public List<MyDayDto> SetDayVolume(Guid dayId, int volume, Guid userId)
+        public void SaveNotifyToken(Guid userId, string token)
         {
-            throw new NotImplementedException();
+            var user = _userRepository.Find(userId);
+            user.FcmToken = token;
+            _userRepository.Update(user);
+            _db.SaveChanges();
+        }
+
+        public void SaveJwtToken(Guid userId, string token)
+        {
+            var user = _userRepository.Find(userId);
+            user.JwtToken = token;
+            _userRepository.Update(user);
+            _db.SaveChanges();
+        }
+
+        public bool NeedShowExample(Guid userDtoId)
+        {
+            return !_myDayRepository.Any(e => e.UserId == userDtoId);
         }
 
         private bool HasAnyDate(Guid userId)
@@ -226,29 +337,49 @@ namespace Services
             return GetFirstDays(userId).Count >= 2;
         }
 
-        private int CalcNewTerm() 
+        private int CalcNewTerm()
         {
+            // первые дни в периодах (максимально из четырех периодов)
             var firstDays = GetFirstDays(_userId).OrderByDescending(e => e.Date).Take(4);
+            // последние дни в периодах (максимально из четырех периодов)
             var lastDays = GetLastDays(_userId).OrderByDescending(e => e.Date).Take(4);
-            var initialCount = firstDays.Count();
+            
+            var initialPeriodsCount = firstDays.Count();
             var first3Days = new List<MyDay>();
             var last3Days = new List<MyDay>();
+            
             if (_myDayRepository.Select(e =>
                 e).Any(e => e.UserId == _userId &&
                             e.Date.CompareTo(new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day)) ==
-                            0))
+                            0) 
+                && initialPeriodsCount > 1)
             {
-                first3Days = firstDays.TakeLast(initialCount - 1).ToList();
-                last3Days = lastDays.TakeLast(initialCount - 1).ToList();
+                // исключить из расчета период, примыкающий к текущей дате, если он короче высчитанного ранее
+                var ld = lastDays.Take(1).ToArray()[0];
+                var fd = firstDays.Take(1).ToArray()[0];
+                var nearTodayPeriodTerm = new DateTime(ld.Year, ld.Month, ld.Day)
+                    .Subtract(new DateTime(fd.Date.Year, fd.Date.Month,
+                        fd.Date.Day)).Days + 1;
+                var oldTerm = _userRepository.Find(_userId).Term;
+                if (nearTodayPeriodTerm < oldTerm)
+                {
+                    first3Days = firstDays.TakeLast(initialPeriodsCount - 1).ToList();
+                    last3Days = lastDays.TakeLast(initialPeriodsCount - 1).ToList();
+                }
+                else
+                {
+                    first3Days = firstDays.Take(initialPeriodsCount).ToList();
+                    last3Days = lastDays.Take(initialPeriodsCount).ToList();
+                }
             }
             else
             {
-                first3Days = firstDays.Take(initialCount).ToList();
-                last3Days = lastDays.Take(initialCount).ToList();
+                first3Days = firstDays.Take(initialPeriodsCount).ToList();
+                last3Days = lastDays.Take(initialPeriodsCount).ToList();
             }
 
             var term = 0;
-            var count = 0;
+            var count = 0; // количество периодов
             foreach (var lastDay in last3Days)
             {
                 term += new DateTime((int)lastDay.Year, (int)lastDay.Month, (int)lastDay.Day)
@@ -266,15 +397,16 @@ namespace Services
             user.Term = term / count;
             _userRepository.Update(user);
             _db.SaveChanges();
+
             return user.Term;
         }
 
-        private int CalcNewCycle() 
+        private int CalcNewCycle()
         {
             var firstDays = GetFirstDays(_userId).OrderByDescending(e => e.Date).Take(4);
             //var initialCount = firstDays.Count();
             var first3Days = firstDays.ToList();
-            
+
             // if (_myDayRepository.Select(e =>
             //     e).Any(e => e.UserId == _userId &&
             //                 e.Date.CompareTo(new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day)) ==
@@ -375,7 +507,8 @@ namespace Services
                         Today = false,
                         Filled = false,
                         PreFilled = true,
-                        MonthName = null
+                        MonthName = null,
+                        Volume = 100
                     });
                 }
 
@@ -392,6 +525,9 @@ namespace Services
             int baseNumber = 0;
             for (var i = 0; i <= count; i++)
             {
+                var volume = filledDays.FirstOrDefault(e =>
+                    e.Year == dayToAdd.Year && e.Month == dayToAdd.Month && e.Day == dayToAdd.Day)?.Volume;
+
                 insertedDay = new MyDayDto()
                 {
                     Year = dayToAdd.Year,
@@ -401,6 +537,7 @@ namespace Services
                     DayOfWeek = (int)dayToAdd.DayOfWeek == 0 ? 7 : (int)dayToAdd.DayOfWeek,
                     Filled = filledDays.Any(e =>
                         e.Year == dayToAdd.Year && e.Month == dayToAdd.Month && e.Day == dayToAdd.Day),
+                    Volume = volume ?? 0,
                     PreFilled = prognoseDays.Any(e =>
                         e.Year == dayToAdd.Year && e.Month == dayToAdd.Month && e.Day == dayToAdd.Day),
                     Week = (dayToAdd.DayOfYear + Delta(dayToAdd.Year)) / 7 + 1
@@ -419,7 +556,7 @@ namespace Services
                 {
                     fieldNumber = 0;
                 }
-                
+
                 if (prevPreFilledDay.AddDays(1).CompareTo(dayToAdd) == 0)
                 {
                     insertedDay.PreFilledNumber = ++preFieldNumber;
@@ -427,8 +564,8 @@ namespace Services
                 else
                 {
                     preFieldNumber = 0;
-                } 
-                
+                }
+
                 if (prevBaseDay.AddDays(1).CompareTo(dayToAdd) == 0)
                 {
                     insertedDay.BaseNumber = ++baseNumber;
@@ -439,7 +576,7 @@ namespace Services
                         {
                             myList[i - j].FilledNumberReverse = j;
                         }
-                        
+
                         for (int j = 1; j <= preFieldNumber; j++)
                         {
                             myList[i - j].PreFilledNumberReverse = j;
@@ -451,11 +588,17 @@ namespace Services
                     baseNumber = 0;
                 }
 
-                prevBaseDay = !insertedDay.Filled && !insertedDay.PreFilled  ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day) : DateOnly.MinValue;
-                prevFilledDay = insertedDay.Filled ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day) : DateOnly.MinValue;
-                prevPreFilledDay = insertedDay.PreFilled ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day) : DateOnly.MinValue;
-                
-                
+                prevBaseDay = !insertedDay.Filled && !insertedDay.PreFilled
+                    ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day)
+                    : DateOnly.MinValue;
+                prevFilledDay = insertedDay.Filled
+                    ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day)
+                    : DateOnly.MinValue;
+                prevPreFilledDay = insertedDay.PreFilled
+                    ? new DateOnly(dayToAdd.Year, dayToAdd.Month, dayToAdd.Day)
+                    : DateOnly.MinValue;
+
+
                 dayToAdd = dayToAdd.AddDays(1);
             }
 

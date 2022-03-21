@@ -6,5 +6,6 @@ namespace Domain.MyCalendar
     {
         public BaseDay MinDay { get; set; }
         public BaseDay MaxDay { get; set; }
+        public int Volume { get; set; }
     }
 }
